@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// /* The generator is what our code is generated into, because this is a schema file and we want to define a bunch of
+// code to our database in this prisma format, it is no sql, nor nosql, is the own format format for prisma, and it is
+// completely separate of any other type of sql format that we can think of
+// And we can define our prisma specific format, and when we run the generator, what our generator will be, in this case
+// is just the default form, we are taking all this prisma code utilizing the prisma-client-js
+// */
+generator client {
+  provider = "prisma-client-js"
+}
+
+// /* This generator creates a library for us, the prisma library which we uses on the @prisma/client to interact with our
+// code through our prisma library, so we don't have to write raw sql query, so this schema file essentially defines our
+// database, it allows us to migrate our database
+
+// In the datasource we have a provider, which is just where the data is COMING from, and the url, which we have to make our
+// own, and we can have only one database/datasource that defines all of our data and we must pass a provider and a
+// database url which links to that particular db
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String          @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  age              Int
+  email            String
+  role             Role            @default(BASIC)
+  writtenPosts     Post[]          @relation("WrittenPosts")
+  favoritePosts    Post[]          @relation("FavoritePosts")
+  userPreference   UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String?         @unique @db.ObjectId
+
+  //This is a block unique modifier, in this case we cannot have the same age AND name in the same row
+  @@unique([age, name])
+  @@index([email])
+}
+
+model UserPreference {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  emailUpdates Boolean
+  user         User?
+}
+
+model Post {
+  // /* A model field is composed by four different parts
+  // 1 - Name of the field
+  // 2 - Type of that field
+  // After that we have two different things that are optional, which is a field modifier and attributes, the modifier is
+  // like the ? in front of the type so we say that it is optional
+  // and the attributes is like in the case below, @id @default(auto()) @map("_id") @db.ObjectId and they are optional
+  // id          String
+  title       String
+  preferences Json
+  // blob          Bytes
+  // blob2         Unsupported("")
+  // this case above is for cases, like we take an existent database, convert it into prisma, and it may not support that
+  // data type
+
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  rating        Float
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  author        User       @relation("WrittenPosts", fields: [authorId], references: [id])
+  authorId      String     @db.ObjectId
+  favoritedBy   User       @relation("FavoritePosts", fields: [favoritedById], references: [id])
+  favoritedById String     @db.ObjectId
+  categories    Category[]
+
+  // This would be a case that in a place of a common id, the title and the authorId would be the rows id's
+  // @@id([title, authorId])
+}
+
+model Category {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  name String @unique
+
+  Post   Post?   @relation(fields: [postId], references: [id])
+  postId String? @db.ObjectId
+}
+
+enum Role {
+  ADMIN
+  BASIC
+}
+
+// /*So basically we define our schema, which define what datasource we are using, which is our database, defines the
+// generator for how we go from our schema to the ts code and where we define all different models, enums and everything
+// related to our database
+
+// The command to migrate this schema to the real database is with the command "npx prisma migrate"
+// When we update this file, it will automatically create a migration, so our database will always be
+// up to date with this file
+
+// */

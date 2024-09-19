@@ -1,0 +1,48 @@
+/* No inheritance */
+
+@property --box-color {
+  syntax: "<color>";
+  inherits: false;
+  initial-value: orange;
+}
+
+
+.box {
+  background-color: var(--box-color);
+  width: 100px;
+  height: 100px;
+}
+
+
+
+.box-1 {
+  --box-color: lightblue;
+}
+
+/* Inheritance */
+
+@property --color-inherit {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: red;
+}
+
+.box-inherit {
+  background-color: var(--color-inherit);  /* Using the inherited variable */
+  width: 100px;
+  height: 100px;
+}
+
+.box-3 {
+  --color-inherit: green;
+  /* Explicit value for the parent */
+}
+
+.child {
+  /* No background-color is needed here; it should inherit */
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 0;
+  left: 100px;
+}
